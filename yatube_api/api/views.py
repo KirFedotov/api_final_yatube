@@ -3,15 +3,19 @@ from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 
 from .permissions import AuthorPermission
-from .serializers import (CommentSerializer, FollowSerializer, GroupSerializer,
-                          PostSerializer)
+from .serializers import (
+    CommentSerializer,
+    FollowSerializer,
+    GroupSerializer,
+    PostSerializer,
+)
 
 from posts.models import Group, Post
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Список групп.
+    Retrieve the list of groups.
     """
 
     queryset = Group.objects.all()
@@ -19,17 +23,19 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class FollowViewSet(mixins.CreateModelMixin,
-                    mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+class FollowViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
     """
-    Список подписок.
+    Retrieve the list of user subscriptions.
     """
 
     serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('following__username',)
+    search_fields = ("following__username",)
 
     def get_queryset(self):
         return self.request.user.follower.all()
@@ -40,13 +46,15 @@ class FollowViewSet(mixins.CreateModelMixin,
 
 class PostViewSet(viewsets.ModelViewSet):
     """
-    Список постов.
+    Retrieve the list of posts.
     """
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (AuthorPermission,
-                          permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = (
+        AuthorPermission,
+        permissions.IsAuthenticatedOrReadOnly,
+    )
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
@@ -55,17 +63,19 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    Список комментариев.
+    Retrieve the list of comments.
     """
 
     serializer_class = CommentSerializer
-    permission_classes = (AuthorPermission,
-                          permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = (
+        AuthorPermission,
+        permissions.IsAuthenticatedOrReadOnly,
+    )
 
     def perform_create(self, serializer):
-        post = get_object_or_404(Post, id=self.kwargs.get('post_id'))
+        post = get_object_or_404(Post, id=self.kwargs.get("post_id"))
         serializer.save(author=self.request.user, post=post)
 
     def get_queryset(self):
-        post = get_object_or_404(Post, id=self.kwargs.get('post_id'))
+        post = get_object_or_404(Post, id=self.kwargs.get("post_id"))
         return post.comments.all()
